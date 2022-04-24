@@ -9,10 +9,10 @@ const Bottomnav = (props) => {
                 </div>
                 <div className='col-md-4'>
                     <span className='p-3' role="button" title="Video" onClick={() => {
-                        if(props.camOn && !props.micOn){
-                            alert('Both mic and video cannot be turned off, leave one on');
-                            return;
-                        }
+                        // if(props.camOn && !props.micOn){
+                        //     alert('Both mic and video cannot be turned off, leave one on');
+                        //     return;
+                        // }
                         props.setcamOn(props.camOn?false:true);
                     }}>
                     {
@@ -23,10 +23,10 @@ const Bottomnav = (props) => {
                         )
                     }
                     </span> <span className='p-3' role="button" title="Audio" onClick={() => {
-                        if(!props.camOn && props.micOn){
-                            alert('Both mic and video cannot be turned off, leave one on');
-                            return;
-                        }
+                        // if(!props.camOn && props.micOn){
+                        //     alert('Both mic and video cannot be turned off, leave one on');
+                        //     return;
+                        // }
                         props.setmicOn(props.micOn?false:true);
                     }}>
                     {

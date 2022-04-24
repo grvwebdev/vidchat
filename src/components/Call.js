@@ -12,6 +12,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 
 
 const socket = io.connect("https://vidchat-node-grv.herokuapp.com");
+// const socket = io.connect("http://localhost:7000");
 const Row = styled.div`
   display: flex;
   width: 100%;
@@ -58,15 +59,15 @@ const Meeting = () => {
     canvasRef.current.width = vidWidth;
     canvasRef.current.height = vidHeight;
     canvasElement = canvasRef.current;
-    if(camOn){
-        const canvasCtx = canvasElement.getContext("2d");
-        canvasCtx.fillStyle = "blue";
-        canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
-        
-        if(!blurOff){
+   
+    const canvasCtx = canvasElement.getContext("2d");
+    canvasCtx.fillStyle = "blue";
+    canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
+   
+        if(!blurOff && camOn){
+            
             canvasCtx.save();
             canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
-    
             canvasCtx.filter = 'none';
             canvasCtx.globalCompositeOperation = 'source-over';
             canvasCtx.drawImage(results.segmentationMask, 0, 0, canvasElement.width, canvasElement.height);
@@ -79,11 +80,15 @@ const Meeting = () => {
             canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
             canvasCtx.restore();
         }
-    } 
-    
-   
-    
 
+        if(!camOn){
+          canvasCtx.save();
+          canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+          canvasCtx.globalCompositeOperation = 'source-in';
+          canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
+          canvasCtx.restore();
+        }        
+      
   }
   
 const videoConstraints = {
@@ -93,7 +98,7 @@ const videoConstraints = {
 
   const selfieSegmentation = new SelfieSegmentation({
     locateFile: (file) => {
-      return `https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/${file}`;
+      return `https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation@0.1.1632777926/${file}`;
     },
   });
   selfieSegmentation.setOptions({
@@ -104,7 +109,6 @@ const videoConstraints = {
 
   var newstream = null;
   socket.on("yourID", (id) => {
-    console.log(id);
     setYourID(id);
   })
   socket.on("allUsers", (users) => {
@@ -118,16 +122,13 @@ const videoConstraints = {
   })
 
   useEffect(() => {
-   
-    navigator.mediaDevices.getUserMedia({ video: camOn, audio: micOn }).then(async stream => {
-       
+    navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(async stream => {
       if (userVideo.current && canvasRef.current) {
-          
-        var audio = stream.getAudioTracks()[0]; 
         userVideo.current.srcObject = stream;
+        await userVideo.current.play();
         const videoWidth = userVideo.current.videoWidth;
         const videoHeight = userVideo.current.videoHeight;
-        await userVideo.current.play();
+       
         canvasRef.current.width = videoWidth;
         canvasRef.current.height = videoHeight;
         canvasElement = canvasRef.current;
@@ -139,18 +140,32 @@ const videoConstraints = {
           });
           camera.start();
           newstream = canvasElement.captureStream(30)
-        
-         if(micOn){
-            newstream.addTrack(audio);
-         }
-        //  console.log(newstream.getAudioTracks()[0], newstream.getVideoTracks()[0]);
-         setcStream(newstream);
+          var audio = stream.getAudioTracks()[0];
+          if(!micOn){
+            audio.enabled = false;
+          } 
+          newstream.addTrack(audio);
+          setcStream(newstream);
       }
 
     
     
   })
-  }, [camOn, micOn, blurOff, yourID]);
+  }, [camOn, blurOff]);
+
+  const handleAudio = (val) => {
+      setmicOn(val);
+      let cstream = cStream;
+      let audio = cstream.getAudioTracks()[0];
+      if(val){
+        audio.enabled = true;
+      }else{
+        audio.enabled = false;
+      }
+      cstream.removeTrack(cstream.getAudioTracks()[0])
+      cstream.addTrack(audio);
+      setcStream(cstream);
+  } 
 
   function callPeer(id) {
     setCalling(true);
@@ -277,7 +292,7 @@ const videoConstraints = {
         {incomingCall}
       </Row>
       </Container>
-            <Bottomnav camOn={camOn} setcamOn={setcamOn} micOn={micOn} setmicOn={setmicOn} blurOff={blurOff} setblurOff={setblurOff}/>
+            <Bottomnav camOn={camOn} setcamOn={setcamOn} micOn={micOn} setmicOn={handleAudio} blurOff={blurOff} setblurOff={setblurOff}/>
       </>
     );
 };
