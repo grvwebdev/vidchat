@@ -26,7 +26,6 @@ const Video = styled.video`
 const Meeting = () => {
   const [yourID, setYourID] = useState("");
   const [users, setUsers] = useState({});
-  const [stream, setStream] = useState();
   const [cStream, setcStream] = useState();
   const [receivingCall, setReceivingCall] = useState(false);
   const [caller, setCaller] = useState("");
@@ -43,7 +42,6 @@ const Meeting = () => {
     const [blurOff, setblurOff] = useState(true);
 
     const canvasRef = useRef(null);
-    const canvasStream = useRef(null);
    
     var canvasElement = null;
 
@@ -123,8 +121,6 @@ const videoConstraints = {
    
     navigator.mediaDevices.getUserMedia({ video: camOn, audio: micOn }).then(async stream => {
        
-      setStream(stream);    
-      console.log(1);
       if (userVideo.current && canvasRef.current) {
           
         var audio = stream.getAudioTracks()[0]; 
